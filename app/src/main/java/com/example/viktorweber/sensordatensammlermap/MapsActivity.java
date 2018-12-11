@@ -118,15 +118,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             mMap = googleMap;
             locman = (LocationManager) getSystemService(LOCATION_SERVICE);
             read();
-            //readground(); Diese Funktion verursacht fehler!!
+            readground();
             double long2 ;
             double langs2 ;
             double messtime;
             editText = findViewById(R.id.editText);
             editText2 = findViewById(R.id.editText2);
             button = findViewById(R.id.button);
-            setUpGraphView();
-            xywerte.setColor(Color.RED);
+
             //Ausblenden von Edittext etc;
             editText.setVisibility(View.INVISIBLE);
             editText2.setVisibility(View.INVISIBLE);
@@ -142,11 +141,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             LatLng[] tlatlng = new LatLng[8];
 
             //Das Hier muss rein wen das auslesen funktioniert von groundtruth!!!!
-            /*
+
             for (int i = 0;i<8;i++) {
                 tlatlng[i] = new LatLng(groundtruthe.get(i).getLangatitude(), groundtruthe.get(i).getLongtitude());
             }
-           */
+          /*
 // Zurzeit gebe ich die groundtruh werte per Hand ein, da das auslesen noch fehler macht
             tlatlng[0]=new LatLng(51.44800,7.27084);
             tlatlng[1]=new LatLng(51.44828,7.27171);
@@ -156,19 +155,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             tlatlng[5]=new LatLng(51.44714,7.27223);
             tlatlng[6]=new LatLng(51.44693,7.27236);
             tlatlng[7]=new LatLng(51.44674,7.27176);
-
-            final float[] distanz= new float[liste.size()];
+*/
+            float[] distanz= new float[liste.size()];
             float[] distanz1 = new float[19];
 
             //Groundtruth zeitwerte
             double[] groundtruth = new double[8];
-            /*
+
             //Das Hier muss rein wen das auslesen funktioniert von groundtruth!!!!
             for(int s=0;s<8;s++){
             groundtruth[s]= groundtruthe.get(s).getTimestamp();
             }
-            */
 
+/*
             // Zurzeit gebe ich die groundtruh werte per Hand ein, da das auslesen noch fehler macht. Hier sind die Timestamps
             groundtruth[0]= 606372;
             groundtruth[1]= 644799;
@@ -179,10 +178,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             groundtruth[6]= 744228;
             groundtruth[7]= 768282;
 
-
+*/
 // Erstellen einer Polyline um den Laufweg dar zu stellen
             mMap.addPolyline(new PolylineOptions().add(tlatlng[0]).add(tlatlng[1]).add(tlatlng[2]).add(tlatlng[3]).add(tlatlng[4]).add(tlatlng[5]).add(tlatlng[6]).add(tlatlng[7]));
 
+            /*
+            langs2=liste.get(10).getLangatitude();
+long2=liste.get(10).getLongtitude();
+editText2.setVisibility(View.VISIBLE);
+editText.setVisibility(View.VISIBLE);
+editText2.setText(Double.toString(langs2));
+editText.setText(Double.toString(long2));
+LatLng tests = new LatLng(long2,langs2);
+mMap.addMarker(new MarkerOptions().position(tests));
+*/
            for(int i = 0 ;i<liste.size();i++) {
                 //Werte von LangLong holen und Zeitstempel
                long2 = liste.get(i).getLangatitude();
@@ -226,6 +235,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                mMap.addCircle(new CircleOptions().center(position3).radius(0.5).strokeColor(Color.GREEN).fillColor(Color.BLUE));
                //Gemesene Punkte
                mMap.addCircle(new CircleOptions().center(position2).radius(0.5).strokeColor(Color.RED).fillColor(Color.BLUE));
+               mMap.addMarker(new MarkerOptions().position(position2));
            }
 
            /*
@@ -261,6 +271,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 //Ende von Funktion nullen raus filtern
 
             datapointadding(bubblesort(distanzohnenull));
+             distanz = bubblesort(distanz);
+            setUpGraphView(distanz[distanz.length-1],distanz[0]);
+            xywerte.setColor(Color.RED);
             graphAcc.addSeries(xywerte);
             graphAcc.addSeries(xywertePunkte);
             xywertePunkte.setCustomShape(new PointsGraphSeries.CustomShape() {
@@ -283,13 +296,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
 
-    private void setUpGraphView(){
+    private void setUpGraphView(float max,float min){
         graphAcc = (GraphView) findViewById(R.id.graphAcc);
         graphAcc.getViewport().setYAxisBoundsManual(true);
         graphAcc.getViewport().setMinY(0);
         graphAcc.getViewport().setMaxY(1);
         graphAcc.getViewport().setMinX(0);
-        graphAcc.getViewport().setMaxX(50);
+        graphAcc.getViewport().setMaxX(max);
         graphAcc.getViewport().setXAxisBoundsManual(true);
     }
 
@@ -308,7 +321,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private List<Messpunkte> liste = new ArrayList<>();
 public void read(){
-            InputStream is = getResources().openRawResource(R.raw.outdoorroute1round1gpsfile);
+            InputStream is = getResources().openRawResource(R.raw.outdoorroute1round2balancedfile);
             BufferedReader reader = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
             String line ="";
 
@@ -373,7 +386,7 @@ try {
 
     public static double extractTimestamp(String line){
         String[] splitUpLine = line.split(",");
-        String zeit = splitUpLine[0].substring(6,splitUpLine[0].length());
+        String zeit = splitUpLine[0].substring(5,splitUpLine[0].length());
         double result = Double.parseDouble(zeit);
         return result;
     }
@@ -382,7 +395,7 @@ try {
     private  List<Groundtruth> groundtruthe = new ArrayList<>();
     public void readground (){
         //Hier muss man per Hand die passende Groundtruhdatei angeben
-        InputStream is = getResources().openRawResource(R.raw.outdoorroute1round1gtwpswithts);
+        InputStream is = getResources().openRawResource(R.raw.outdoorroute1round2gtwpswithts);
         BufferedReader reader = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
         String line ="";
 
@@ -392,9 +405,9 @@ try {
             while ((line = reader.readLine()) != null) {
                 Groundtruth groundtruth = new Groundtruth();
 
-                groundtruth.setLongtitude(extractLatinDoubleFormatgroundtruth(line));
-                groundtruth.setLangatitude(extractLoninDoubleFormatgroundtruth(line));
-                groundtruth.setTimestamp(extractTimestampVonGroundtruth(line));
+                groundtruth.setLongtitude(extractLonFromGTFile(line));
+                groundtruth.setLangatitude(extractLatFromGTFile(line));
+                groundtruth.setTimestamp(extractTimestampFromGTFile(line));
                 groundtruthe.add(groundtruth);
             }
         } catch (IOException e1) {
@@ -412,21 +425,40 @@ try {
     return  result;
     }
 
-    public static double extractLoninDoubleFormatgroundtruth(String line){
-        String[] splitUpLine = line.split(",");
-        String lon = splitUpLine[2].substring(0,1);
-        String lonhinten= splitUpLine[2].substring(3,7);
-    double result = Double.parseDouble(lon +"."+lonhinten);
-    return result;
-    }
-
-    public static double extractLatinDoubleFormatgroundtruth(String line){
-        String[] splitUpLine = line.split(";");
-        String lat = splitUpLine[3].substring(0,0);
-        String lathinten = splitUpLine[3].substring(2,6);
-        double result = Double.parseDouble(lat+"."+lathinten);
+    public static double extractLatFromGTFile(String line){
+        double result = 0;
+        try{
+            String[] splitUpLine = line.split(",");
+            result = Double.parseDouble(splitUpLine[2].substring(0, splitUpLine[2].length() - 2));
+        }
+        catch(Exception e){
+            e.printStackTrace();
+            Log.e("EXC", e.getStackTrace().toString());
+        }
         return result;
     }
+
+    public static double extractLonFromGTFile(String line){
+        double result = 0;
+        try{
+            String[] splitUpLine = line.split(",");
+            result = Double.parseDouble(splitUpLine[3].substring(0, splitUpLine[3].length() - 2));
+        }catch(Exception e){
+            e.printStackTrace();
+            Log.e("EXC", e.getStackTrace().toString());
+        }
+
+        return result;
+    }
+
+    public static double extractTimestampFromGTFile(String line){
+        String[] splitUpLine = line.split(",");
+        long result = Long.parseLong(splitUpLine[1].substring(5,splitUpLine[1].length()));
+        return result;
+    }
+
+
+
 
 
 }
